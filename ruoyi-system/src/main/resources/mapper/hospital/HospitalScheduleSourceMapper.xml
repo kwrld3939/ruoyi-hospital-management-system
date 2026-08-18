@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.hospital.mapper.HospitalScheduleSourceMapper">
+
+    <resultMap type="HospitalScheduleSource" id="HospitalScheduleSourceResult">
+        <id     property="sourceId"       column="source_id"       />
+        <result property="scheduleId"     column="schedule_id"     />
+        <result property="departmentId"   column="department_id"   />
+        <result property="departmentName" column="department_name" />
+        <result property="doctorId"       column="doctor_id"       />
+        <result property="doctorName"     column="doctor_name"     />
+        <result property="doctorCode"     column="doctor_code"     />
+        <result property="title"          column="title"           />
+        <result property="scheduleDate"   column="schedule_date"   />
+        <result property="timeSlot"       column="time_slot"       />
+        <result property="location"       column="location"        />
+        <result property="totalNum"       column="total_num"       />
+        <result property="remainNum"      column="remain_num"      />
+        <result property="status"         column="status"          />
+        <result property="delFlag"        column="del_flag"        />
+        <result property="createBy"       column="create_by"       />
+        <result property="createTime"     column="create_time"     />
+        <result property="updateBy"       column="update_by"       />
+        <result property="updateTime"     column="update_time"     />
+        <result property="remark"         column="remark"          />
+    </resultMap>
+
+    <sql id="selectHospitalScheduleSourceVo">
+        select hss.source_id, hss.schedule_id, hss.department_id, hd.department_name,
+               hss.doctor_id, hdoc.doctor_name, hdoc.doctor_code, hdoc.title,
+               hs.schedule_date, hs.time_slot, hs.location,
+               hss.total_num, hss.remain_num, hss.status, hss.del_flag,
+               hss.create_by, hss.create_time, hss.update_by, hss.update_time, hss.remark
+        from hospital_schedule_source hss
+        inner join hospital_schedule hs on hss.schedule_id = hs.schedule_id and hs.del_flag = '0'
+        left join hospital_department hd on hss.department_id = hd.department_id
+        left join hospital_doctor hdoc on hss.doctor_id = hdoc.doctor_id
+    </sql>
+
+    <select id="selectHospitalScheduleSourceList" parameterType="HospitalScheduleSource" resultMap="HospitalScheduleSourceResult">
+        <include refid="selectHospitalScheduleSourceVo"/>
+        <where>
+            hss.del_flag = '0'
+            <if test="scheduleId != null">
+                AND hss.schedule_id = #{scheduleId}
+            </if>
+            <if test="departmentId != null">
+                AND hss.department_id = #{departmentId}
+            </if>
+            <if test="doctorId != null">
+                AND hss.doctor_id = #{doctorId}
+            </if>
+            <if test="scheduleDate != null">
+                AND hs.schedule_date = #{scheduleDate}
+            </if>
+            <if test="timeSlot != null and timeSlot != ''">
+                AND hs.time_slot = #{timeSlot}
+            </if>
+            <if test="status != null and status != ''">
+                AND hss.status = #{status}
+            </if>
+        </where>
+        order by hs.schedule_date desc, hs.time_slot asc, hss.source_id desc
+    </select>
+
+    <select id="selectHospitalScheduleSourceBySourceId" parameterType="Long" resultMap="HospitalScheduleSourceResult">
+        <include refid="selectHospitalScheduleSourceVo"/>
+        where hss.source_id = #{sourceId} and hss.del_flag = '0'
+    </select>
+
+    <select id="checkScheduleSourceUnique" parameterType="HospitalScheduleSource" resultMap="HospitalScheduleSourceResult">
+        <include refid="selectHospitalScheduleSourceVo"/>
+        where hss.schedule_id = #{scheduleId}
+          and hss.del_flag = '0'
+        limit 1
+    </select>
+
+    <insert id="insertHospitalScheduleSource" parameterType="HospitalScheduleSource" useGeneratedKeys="true" keyProperty="sourceId">
+        insert into hospital_schedule_source
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="scheduleId != null">schedule_id,</if>
+            <if test="departmentId != null">department_id,</if>
+            <if test="doctorId != null">doctor_id,</if>
+            <if test="totalNum != null">total_num,</if>
+            <if test="remainNum != null">remain_num,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            <if test="remark != null and remark != ''">remark,</if>
+            create_time
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="scheduleId != null">#{scheduleId},</if>
+            <if test="departmentId != null">#{departmentId},</if>
+            <if test="doctorId != null">#{doctorId},</if>
+            <if test="totalNum != null">#{totalNum},</if>
+            <if test="remainNum != null">#{remainNum},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            <if test="remark != null and remark != ''">#{remark},</if>
+            sysdate()
+        </trim>
+    </insert>
+
+    <update id="updateHospitalScheduleSource" parameterType="HospitalScheduleSource">
+        update hospital_schedule_source
+        <set>
+            <if test="scheduleId != null">schedule_id = #{scheduleId},</if>
+            <if test="departmentId != null">department_id = #{departmentId},</if>
+            <if test="doctorId != null">doctor_id = #{doctorId},</if>
+            <if test="totalNum != null">total_num = #{totalNum},</if>
+            <if test="remainNum != null">remain_num = #{remainNum},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            update_time = sysdate()
+        </set>
+        where source_id = #{sourceId}
+    </update>
+
+    <update id="decreaseRemainNum" parameterType="Long">
+        update hospital_schedule_source
+        set remain_num = remain_num - 1,
+            status = case when remain_num - 1 = 0 then '2' else status end,
+            update_time = sysdate()
+        where source_id = #{sourceId}
+          and del_flag = '0'
+          and status = '0'
+          and remain_num &gt; 0
+    </update>
+
+    <update id="increaseRemainNum" parameterType="Long">
+        update hospital_schedule_source
+        set remain_num = remain_num + 1,
+            status = case when status = '2' and remain_num + 1 &gt; 0 then '0' else status end,
+            update_time = sysdate()
+        where source_id = #{sourceId}
+          and del_flag = '0'
+          and remain_num &lt; total_num
+    </update>
+
+    <update id="deleteHospitalScheduleSourceBySourceId" parameterType="Long">
+        update hospital_schedule_source set del_flag = '2', update_time = sysdate() where source_id = #{sourceId}
+    </update>
+
+    <update id="deleteHospitalScheduleSourceBySourceIds" parameterType="Long">
+        update hospital_schedule_source set del_flag = '2', update_time = sysdate() where source_id in
+        <foreach item="sourceId" collection="array" open="(" separator="," close=")">
+            #{sourceId}
+        </foreach>
+    </update>
+
+    <update id="deleteHospitalScheduleSourceByScheduleId" parameterType="Long">
+        update hospital_schedule_source set del_flag = '2', update_time = sysdate() where schedule_id = #{scheduleId}
+    </update>
+
+    <update id="deleteHospitalScheduleSourceByScheduleIds" parameterType="Long">
+        update hospital_schedule_source set del_flag = '2', update_time = sysdate() where schedule_id in
+        <foreach item="scheduleId" collection="array" open="(" separator="," close=")">
+            #{scheduleId}
+        </foreach>
+    </update>
+</mapper>

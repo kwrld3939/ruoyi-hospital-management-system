@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.hospital.mapper.HospitalDoctorMapper">
+
+    <resultMap type="HospitalDoctor" id="HospitalDoctorResult">
+        <id     property="doctorId"       column="doctor_id"       />
+        <result property="departmentId"   column="department_id"   />
+        <result property="departmentName" column="department_name" />
+        <result property="deptName"       column="dept_name"       />
+        <result property="userId"         column="user_id"         />
+        <result property="userName"       column="user_name"       />
+        <result property="doctorCode"     column="doctor_code"     />
+        <result property="doctorName"     column="doctor_name"     />
+        <result property="gender"         column="gender"          />
+        <result property="title"          column="title"           />
+        <result property="specialty"      column="specialty"       />
+        <result property="phone"          column="phone"           />
+        <result property="status"         column="status"          />
+        <result property="delFlag"        column="del_flag"        />
+        <result property="createBy"       column="create_by"       />
+        <result property="createTime"     column="create_time"     />
+        <result property="updateBy"       column="update_by"       />
+        <result property="updateTime"     column="update_time"     />
+        <result property="remark"         column="remark"          />
+    </resultMap>
+
+    <sql id="selectHospitalDoctorVo">
+        select hd.doctor_id, hd.department_id, hdep.department_name, d.dept_name,
+               hd.user_id, u.user_name,
+               hd.doctor_code, hd.doctor_name, hd.gender, hd.title, hd.specialty,
+               hd.phone, hd.status, hd.del_flag, hd.create_by, hd.create_time,
+               hd.update_by, hd.update_time, hd.remark
+        from hospital_doctor hd
+        left join hospital_department hdep on hd.department_id = hdep.department_id
+        left join sys_dept d on hdep.dept_id = d.dept_id
+        left join sys_user u on hd.user_id = u.user_id
+    </sql>
+
+    <select id="selectHospitalDoctorList" parameterType="HospitalDoctor" resultMap="HospitalDoctorResult">
+        <include refid="selectHospitalDoctorVo"/>
+        <where>
+            hd.del_flag = '0'
+            <if test="departmentId != null">
+                AND hd.department_id = #{departmentId}
+            </if>
+            <if test="doctorCode != null and doctorCode != ''">
+                AND hd.doctor_code like concat('%', #{doctorCode}, '%')
+            </if>
+            <if test="doctorName != null and doctorName != ''">
+                AND hd.doctor_name like concat('%', #{doctorName}, '%')
+            </if>
+            <if test="doctorKeyword != null and doctorKeyword != ''">
+                AND (
+                    hd.doctor_name like concat(#{doctorKeyword}, '%')
+                    OR hd.doctor_code like concat(#{doctorKeyword}, '%')
+                )
+            </if>
+            <if test="title != null and title != ''">
+                AND hd.title like concat('%', #{title}, '%')
+            </if>
+            <if test="userId != null">
+                AND hd.user_id = #{userId}
+            </if>
+            <if test="status != null and status != ''">
+                AND hd.status = #{status}
+            </if>
+            ${params.dataScope}
+        </where>
+        order by hd.doctor_id desc
+    </select>
+
+    <select id="selectHospitalDoctorByDoctorId" parameterType="Long" resultMap="HospitalDoctorResult">
+        <include refid="selectHospitalDoctorVo"/>
+        where hd.doctor_id = #{doctorId} and hd.del_flag = '0'
+    </select>
+
+    <select id="selectHospitalDoctorByUserId" parameterType="Long" resultMap="HospitalDoctorResult">
+        <include refid="selectHospitalDoctorVo"/>
+        where hd.user_id = #{userId} and hd.del_flag = '0'
+        limit 1
+    </select>
+
+    <select id="checkDoctorCodeUnique" parameterType="String" resultMap="HospitalDoctorResult">
+        <include refid="selectHospitalDoctorVo"/>
+        where hd.doctor_code = #{doctorCode} and hd.del_flag = '0' limit 1
+    </select>
+
+    <insert id="insertHospitalDoctor" parameterType="HospitalDoctor" useGeneratedKeys="true" keyProperty="doctorId">
+        insert into hospital_doctor
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="departmentId != null">department_id,</if>
+            <if test="userId != null">user_id,</if>
+            <if test="doctorCode != null and doctorCode != ''">doctor_code,</if>
+            <if test="doctorName != null and doctorName != ''">doctor_name,</if>
+            <if test="gender != null and gender != ''">gender,</if>
+            <if test="title != null and title != ''">title,</if>
+            <if test="specialty != null and specialty != ''">specialty,</if>
+            <if test="phone != null and phone != ''">phone,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            <if test="remark != null and remark != ''">remark,</if>
+            create_time
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="departmentId != null">#{departmentId},</if>
+            <if test="userId != null">#{userId},</if>
+            <if test="doctorCode != null and doctorCode != ''">#{doctorCode},</if>
+            <if test="doctorName != null and doctorName != ''">#{doctorName},</if>
+            <if test="gender != null and gender != ''">#{gender},</if>
+            <if test="title != null and title != ''">#{title},</if>
+            <if test="specialty != null and specialty != ''">#{specialty},</if>
+            <if test="phone != null and phone != ''">#{phone},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            <if test="remark != null and remark != ''">#{remark},</if>
+            sysdate()
+        </trim>
+    </insert>
+
+    <update id="updateHospitalDoctor" parameterType="HospitalDoctor">
+        update hospital_doctor
+        <set>
+            <if test="departmentId != null">department_id = #{departmentId},</if>
+            user_id = #{userId},
+            <if test="doctorCode != null and doctorCode != ''">doctor_code = #{doctorCode},</if>
+            <if test="doctorName != null and doctorName != ''">doctor_name = #{doctorName},</if>
+            <if test="gender != null">gender = #{gender},</if>
+            <if test="title != null">title = #{title},</if>
+            <if test="specialty != null">specialty = #{specialty},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            update_time = sysdate()
+        </set>
+        where doctor_id = #{doctorId}
+    </update>
+
+    <update id="deleteHospitalDoctorByDoctorId" parameterType="Long">
+        update hospital_doctor set del_flag = '2', update_time = sysdate() where doctor_id = #{doctorId}
+    </update>
+
+    <update id="deleteHospitalDoctorByDoctorIds" parameterType="Long">
+        update hospital_doctor set del_flag = '2', update_time = sysdate() where doctor_id in
+        <foreach item="doctorId" collection="array" open="(" separator="," close=")">
+            #{doctorId}
+        </foreach>
+    </update>
+</mapper>

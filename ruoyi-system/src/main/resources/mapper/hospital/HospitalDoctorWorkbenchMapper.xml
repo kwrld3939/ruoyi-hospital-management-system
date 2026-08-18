@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.hospital.mapper.HospitalDoctorWorkbenchMapper">
+
+    <resultMap type="HospitalDoctor" id="HospitalDoctorInfoResult">
+        <id     property="doctorId"       column="doctor_id"       />
+        <result property="departmentId"   column="department_id"   />
+        <result property="departmentName" column="department_name" />
+        <result property="doctorCode"     column="doctor_code"     />
+        <result property="doctorName"     column="doctor_name"     />
+    </resultMap>
+
+    <resultMap type="HospitalDoctorWorkbenchRegistrationItem" id="HospitalDoctorWorkbenchRegistrationItemResult">
+        <id     property="registrationId"   column="registration_id"   />
+        <result property="registrationNo"   column="registration_no"   />
+        <result property="patientName"      column="patient_name"      />
+        <result property="patientCode"      column="patient_code"      />
+        <result property="patientPhone"     column="patient_phone"     />
+        <result property="departmentName"   column="department_name"   />
+        <result property="doctorName"       column="doctor_name"       />
+        <result property="registrationTime" column="registration_time" />
+        <result property="visitDate"        column="visit_date"        />
+        <result property="timeSlot"         column="time_slot"         />
+        <result property="location"         column="location"          />
+        <result property="status"           column="status"            />
+    </resultMap>
+
+    <resultMap type="HospitalDoctorWorkbenchVisitItem" id="HospitalDoctorWorkbenchVisitItemResult">
+        <id     property="visitId"          column="visit_id"          />
+        <result property="registrationNo"   column="registration_no"   />
+        <result property="patientName"      column="patient_name"      />
+        <result property="patientPhone"     column="patient_phone"     />
+        <result property="visitTime"        column="visit_time"        />
+        <result property="chiefComplaint"   column="chief_complaint"   />
+        <result property="diagnosis"        column="diagnosis"         />
+        <result property="status"           column="status"            />
+    </resultMap>
+
+    <resultMap type="HospitalDoctorWorkbenchScheduleItem" id="HospitalDoctorWorkbenchScheduleItemResult">
+        <id     property="scheduleId"       column="schedule_id"       />
+        <result property="sourceId"         column="source_id"         />
+        <result property="scheduleDate"     column="schedule_date"     />
+        <result property="timeSlot"         column="time_slot"         />
+        <result property="location"         column="location"          />
+        <result property="totalNum"         column="total_num"         />
+        <result property="remainNum"        column="remain_num"        />
+        <result property="sourceStatus"     column="source_status"     />
+    </resultMap>
+
+    <sql id="selectWorkbenchRegistrationVo">
+        select hr.registration_id, hr.registration_no,
+               hp.patient_name, hp.patient_code, hp.phone as patient_phone,
+               hd.department_name, hdoc.doctor_name,
+               hr.registration_time, hr.visit_date, hr.time_slot, hs.location, hr.status
+        from hospital_registration hr
+        left join hospital_patient hp on hr.patient_id = hp.patient_id
+        left join hospital_department hd on hr.department_id = hd.department_id
+        left join hospital_doctor hdoc on hr.doctor_id = hdoc.doctor_id
+        left join hospital_schedule hs on hr.schedule_id = hs.schedule_id
+    </sql>
+
+    <select id="selectDoctorInfo" resultMap="HospitalDoctorInfoResult">
+        select hdoc.doctor_id, hdoc.department_id, hd.department_name,
+               hdoc.doctor_code, hdoc.doctor_name
+        from hospital_doctor hdoc
+        left join hospital_department hd on hdoc.department_id = hd.department_id
+        where hdoc.del_flag = '0'
+          and hdoc.doctor_id = #{doctorId}
+        limit 1
+    </select>
+
+    <select id="selectDoctorInfoByUserId" resultMap="HospitalDoctorInfoResult">
+        select hdoc.doctor_id, hdoc.department_id, hd.department_name,
+               hdoc.doctor_code, hdoc.doctor_name
+        from hospital_doctor hdoc
+        left join hospital_department hd on hdoc.department_id = hd.department_id
+        where hdoc.del_flag = '0'
+          and hdoc.user_id = #{userId}
+        limit 1
+    </select>
+
+    <select id="selectRegistrationCount" resultType="Long">
+        select count(1)
+        from hospital_registration
+        where del_flag = '0'
+          and doctor_id = #{doctorId}
+          and visit_date = #{visitDate}
+    </select>
+
+    <select id="selectStatusCount" resultType="Long">
+        select count(1)
+        from hospital_registration
+        where del_flag = '0'
+          and doctor_id = #{doctorId}
+          and visit_date = #{visitDate}
+          and status = #{status}
+    </select>
+
+    <select id="selectRegistrationList" resultMap="HospitalDoctorWorkbenchRegistrationItemResult">
+        <include refid="selectWorkbenchRegistrationVo"/>
+        where hr.del_flag = '0'
+          and hr.doctor_id = #{doctorId}
+          and hr.visit_date = #{visitDate}
+        order by hr.time_slot asc, hr.registration_time asc, hr.registration_id asc
+        limit 20
+    </select>
+
+    <select id="selectPendingList" resultMap="HospitalDoctorWorkbenchRegistrationItemResult">
+        <include refid="selectWorkbenchRegistrationVo"/>
+        where hr.del_flag = '0'
+          and hr.doctor_id = #{doctorId}
+          and hr.visit_date = #{visitDate}
+          and hr.status = '0'
+        order by hr.time_slot asc, hr.registration_time asc, hr.registration_id asc
+        limit 20
+    </select>
+
+    <select id="selectScheduleList" resultMap="HospitalDoctorWorkbenchScheduleItemResult">
+        select hs.schedule_id, hss.source_id, hs.schedule_date, hs.time_slot, hs.location,
+               coalesce(hss.total_num, 0) as total_num,
+               coalesce(hss.remain_num, 0) as remain_num,
+               hss.status as source_status
+        from hospital_schedule hs
+        left join hospital_schedule_source hss on hs.schedule_id = hss.schedule_id and hss.del_flag = '0'
+        where hs.del_flag = '0'
+          and hs.doctor_id = #{doctorId}
+          and hs.schedule_date = #{visitDate}
+        order by hs.time_slot asc, hs.schedule_id asc
+    </select>
+
+    <select id="selectRecentVisitList" resultMap="HospitalDoctorWorkbenchVisitItemResult">
+        select hvr.visit_id, hr.registration_no,
+               hp.patient_name, hp.phone as patient_phone,
+               hvr.visit_time, hvr.chief_complaint, hvr.diagnosis, hvr.status
+        from hospital_visit_record hvr
+        left join hospital_registration hr on hvr.registration_id = hr.registration_id
+        left join hospital_patient hp on hvr.patient_id = hp.patient_id
+        where hvr.del_flag = '0'
+          and hvr.doctor_id = #{doctorId}
+        order by hvr.visit_time desc, hvr.visit_id desc
+        limit 8
+    </select>
+</mapper>

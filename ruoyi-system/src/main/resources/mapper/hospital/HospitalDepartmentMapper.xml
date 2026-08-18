@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.hospital.mapper.HospitalDepartmentMapper">
+
+    <resultMap type="HospitalDepartment" id="HospitalDepartmentResult">
+        <id     property="departmentId"   column="department_id"   />
+        <result property="deptId"         column="dept_id"         />
+        <result property="deptName"       column="dept_name"       />
+        <result property="departmentCode" column="department_code" />
+        <result property="departmentName" column="department_name" />
+        <result property="departmentType" column="department_type" />
+        <result property="directorName"   column="director_name"   />
+        <result property="phone"          column="phone"           />
+        <result property="location"       column="location"        />
+        <result property="status"         column="status"          />
+        <result property="delFlag"        column="del_flag"        />
+        <result property="createBy"       column="create_by"       />
+        <result property="createTime"     column="create_time"     />
+        <result property="updateBy"       column="update_by"       />
+        <result property="updateTime"     column="update_time"     />
+        <result property="remark"         column="remark"          />
+    </resultMap>
+
+    <sql id="selectHospitalDepartmentVo">
+        select hd.department_id, hd.dept_id, d.dept_name, hd.department_code, hd.department_name,
+               hd.department_type, hd.director_name, hd.phone, hd.location, hd.status, hd.del_flag,
+               hd.create_by, hd.create_time, hd.update_by, hd.update_time, hd.remark
+        from hospital_department hd
+        left join sys_dept d on hd.dept_id = d.dept_id
+    </sql>
+
+    <select id="selectHospitalDepartmentList" parameterType="HospitalDepartment" resultMap="HospitalDepartmentResult">
+        <include refid="selectHospitalDepartmentVo"/>
+        <where>
+            hd.del_flag = '0'
+            <if test="deptId != null">
+                AND hd.dept_id = #{deptId}
+            </if>
+            <if test="departmentCode != null and departmentCode != ''">
+                AND hd.department_code like concat('%', #{departmentCode}, '%')
+            </if>
+            <if test="departmentName != null and departmentName != ''">
+                AND hd.department_name like concat('%', #{departmentName}, '%')
+            </if>
+            <if test="departmentType != null and departmentType != ''">
+                AND hd.department_type = #{departmentType}
+            </if>
+            <if test="status != null and status != ''">
+                AND hd.status = #{status}
+            </if>
+            ${params.dataScope}
+        </where>
+        order by hd.department_id desc
+    </select>
+
+    <select id="selectHospitalDepartmentByDepartmentId" parameterType="Long" resultMap="HospitalDepartmentResult">
+        <include refid="selectHospitalDepartmentVo"/>
+        where hd.department_id = #{departmentId} and hd.del_flag = '0'
+    </select>
+
+    <select id="checkDepartmentCodeUnique" parameterType="String" resultMap="HospitalDepartmentResult">
+        <include refid="selectHospitalDepartmentVo"/>
+        where hd.department_code = #{departmentCode} and hd.del_flag = '0' limit 1
+    </select>
+
+    <insert id="insertHospitalDepartment" parameterType="HospitalDepartment" useGeneratedKeys="true" keyProperty="departmentId">
+        insert into hospital_department
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="deptId != null">dept_id,</if>
+            <if test="departmentCode != null and departmentCode != ''">department_code,</if>
+            <if test="departmentName != null and departmentName != ''">department_name,</if>
+            <if test="departmentType != null and departmentType != ''">department_type,</if>
+            <if test="directorName != null and directorName != ''">director_name,</if>
+            <if test="phone != null and phone != ''">phone,</if>
+            <if test="location != null and location != ''">location,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            <if test="remark != null and remark != ''">remark,</if>
+            create_time
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="deptId != null">#{deptId},</if>
+            <if test="departmentCode != null and departmentCode != ''">#{departmentCode},</if>
+            <if test="departmentName != null and departmentName != ''">#{departmentName},</if>
+            <if test="departmentType != null and departmentType != ''">#{departmentType},</if>
+            <if test="directorName != null and directorName != ''">#{directorName},</if>
+            <if test="phone != null and phone != ''">#{phone},</if>
+            <if test="location != null and location != ''">#{location},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            <if test="remark != null and remark != ''">#{remark},</if>
+            sysdate()
+        </trim>
+    </insert>
+
+    <update id="updateHospitalDepartment" parameterType="HospitalDepartment">
+        update hospital_department
+        <set>
+            <if test="deptId != null">dept_id = #{deptId},</if>
+            <if test="departmentCode != null and departmentCode != ''">department_code = #{departmentCode},</if>
+            <if test="departmentName != null and departmentName != ''">department_name = #{departmentName},</if>
+            <if test="departmentType != null">department_type = #{departmentType},</if>
+            <if test="directorName != null">director_name = #{directorName},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="location != null">location = #{location},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            update_time = sysdate()
+        </set>
+        where department_id = #{departmentId}
+    </update>
+
+    <update id="deleteHospitalDepartmentByDepartmentId" parameterType="Long">
+        update hospital_department set del_flag = '2', update_time = sysdate() where department_id = #{departmentId}
+    </update>
+
+    <update id="deleteHospitalDepartmentByDepartmentIds" parameterType="Long">
+        update hospital_department set del_flag = '2', update_time = sysdate() where department_id in
+        <foreach item="departmentId" collection="array" open="(" separator="," close=")">
+            #{departmentId}
+        </foreach>
+    </update>
+</mapper>

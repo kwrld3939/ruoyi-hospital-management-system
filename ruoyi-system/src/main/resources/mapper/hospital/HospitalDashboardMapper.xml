@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.hospital.mapper.HospitalDashboardMapper">
+
+    <resultMap type="HospitalDashboardDepartmentStat" id="HospitalDashboardDepartmentStatResult">
+        <id     property="departmentId"       column="department_id"       />
+        <result property="departmentName"     column="department_name"     />
+        <result property="registrationCount"  column="registration_count"  />
+        <result property="visitCount"         column="visit_count"         />
+    </resultMap>
+
+    <resultMap type="HospitalDashboardTrend" id="HospitalDashboardTrendResult">
+        <result property="statDate"           column="stat_date"           />
+        <result property="registrationCount"  column="registration_count"  />
+        <result property="visitCount"         column="visit_count"         />
+    </resultMap>
+
+    <resultMap type="HospitalDashboardRegistrationItem" id="HospitalDashboardRegistrationItemResult">
+        <id     property="registrationId"     column="registration_id"     />
+        <result property="registrationNo"     column="registration_no"     />
+        <result property="patientName"        column="patient_name"        />
+        <result property="patientPhone"       column="patient_phone"       />
+        <result property="departmentName"     column="department_name"     />
+        <result property="doctorName"         column="doctor_name"         />
+        <result property="visitDate"          column="visit_date"          />
+        <result property="timeSlot"           column="time_slot"           />
+        <result property="location"           column="location"            />
+    </resultMap>
+
+    <resultMap type="HospitalDashboardSourceItem" id="HospitalDashboardSourceItemResult">
+        <id     property="sourceId"           column="source_id"           />
+        <result property="departmentName"     column="department_name"     />
+        <result property="doctorName"         column="doctor_name"         />
+        <result property="scheduleDate"       column="schedule_date"       />
+        <result property="timeSlot"           column="time_slot"           />
+        <result property="location"           column="location"            />
+        <result property="totalNum"           column="total_num"           />
+        <result property="remainNum"          column="remain_num"          />
+        <result property="status"             column="status"              />
+    </resultMap>
+
+    <select id="selectTodayRegistrationCount" resultType="Long">
+        select count(1)
+        from hospital_registration
+        where del_flag = '0'
+          and visit_date = curdate()
+    </select>
+
+    <select id="selectTodayVisitCount" resultType="Long">
+        select count(1)
+        from hospital_visit_record
+        where del_flag = '0'
+          and status = '0'
+          and date(visit_time) = curdate()
+    </select>
+
+    <select id="selectTodayCancelCount" resultType="Long">
+        select count(1)
+        from hospital_registration
+        where del_flag = '0'
+          and status = '1'
+          and visit_date = curdate()
+    </select>
+
+    <select id="selectTodayRemainSourceCount" resultType="Long">
+        select coalesce(sum(hss.remain_num), 0)
+        from hospital_schedule_source hss
+        inner join hospital_schedule hs on hss.schedule_id = hs.schedule_id and hs.del_flag = '0'
+        where hss.del_flag = '0'
+          and hss.status = '0'
+          and hs.schedule_date = curdate()
+    </select>
+
+    <select id="selectPendingRegistrationCount" resultType="Long">
+        select count(1)
+        from hospital_registration
+        where del_flag = '0'
+          and status = '0'
+          and visit_date = curdate()
+    </select>
+
+    <select id="selectLowSourceCount" resultType="Long">
+        select count(1)
+        from hospital_schedule_source hss
+        inner join hospital_schedule hs on hss.schedule_id = hs.schedule_id and hs.del_flag = '0'
+        where hss.del_flag = '0'
+          and hss.status = '0'
+          and hs.schedule_date &gt;= curdate()
+          and hss.remain_num between 1 and 5
+    </select>
+
+    <select id="selectDepartmentStats" resultMap="HospitalDashboardDepartmentStatResult">
+        select hd.department_id,
+               hd.department_name,
+               coalesce(r.registration_count, 0) as registration_count,
+               coalesce(v.visit_count, 0) as visit_count
+        from hospital_department hd
+        left join (
+            select department_id, count(1) as registration_count
+            from hospital_registration
+            where del_flag = '0'
+              and visit_date = curdate()
+            group by department_id
+        ) r on hd.department_id = r.department_id
+        left join (
+            select department_id, count(1) as visit_count
+            from hospital_visit_record
+            where del_flag = '0'
+              and status = '0'
+              and date(visit_time) = curdate()
+            group by department_id
+        ) v on hd.department_id = v.department_id
+        where hd.del_flag = '0'
+        order by (coalesce(r.registration_count, 0) + coalesce(v.visit_count, 0)) desc, hd.department_id asc
+        limit 8
+    </select>
+
+    <select id="selectRegistrationTrend" resultMap="HospitalDashboardTrendResult">
+        select date_format(visit_date, '%m-%d') as stat_date,
+               count(1) as registration_count,
+               0 as visit_count
+        from hospital_registration
+        where del_flag = '0'
+          and visit_date between date_sub(curdate(), interval 6 day) and curdate()
+        group by date_format(visit_date, '%m-%d')
+        order by min(visit_date) asc
+    </select>
+
+    <select id="selectVisitTrend" resultMap="HospitalDashboardTrendResult">
+        select date_format(visit_time, '%m-%d') as stat_date,
+               0 as registration_count,
+               count(1) as visit_count
+        from hospital_visit_record
+        where del_flag = '0'
+          and status = '0'
+          and date(visit_time) between date_sub(curdate(), interval 6 day) and curdate()
+        group by date_format(visit_time, '%m-%d')
+        order by min(date(visit_time)) asc
+    </select>
+
+    <select id="selectPendingRegistrationList" resultMap="HospitalDashboardRegistrationItemResult">
+        select hr.registration_id, hr.registration_no,
+               hp.patient_name, hp.phone as patient_phone,
+               hd.department_name, hdoc.doctor_name,
+               hr.visit_date, hr.time_slot, hs.location
+        from hospital_registration hr
+        left join hospital_patient hp on hr.patient_id = hp.patient_id
+        left join hospital_department hd on hr.department_id = hd.department_id
+        left join hospital_doctor hdoc on hr.doctor_id = hdoc.doctor_id
+        left join hospital_schedule hs on hr.schedule_id = hs.schedule_id
+        where hr.del_flag = '0'
+          and hr.status = '0'
+          and hr.visit_date = curdate()
+        order by hr.time_slot asc, hr.registration_time asc, hr.registration_id asc
+        limit 8
+    </select>
+
+    <select id="selectLowSourceList" resultMap="HospitalDashboardSourceItemResult">
+        select hss.source_id, hd.department_name, hdoc.doctor_name,
+               hs.schedule_date, hs.time_slot, hs.location,
+               hss.total_num, hss.remain_num, hss.status
+        from hospital_schedule_source hss
+        inner join hospital_schedule hs on hss.schedule_id = hs.schedule_id and hs.del_flag = '0'
+        left join hospital_department hd on hss.department_id = hd.department_id
+        left join hospital_doctor hdoc on hss.doctor_id = hdoc.doctor_id
+        where hss.del_flag = '0'
+          and hss.status = '0'
+          and hs.schedule_date &gt;= curdate()
+          and hss.remain_num between 1 and 5
+        order by hs.schedule_date asc, hs.time_slot asc, hss.remain_num asc, hss.source_id asc
+        limit 8
+    </select>
+</mapper>

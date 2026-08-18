@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.hospital.mapper.HospitalRegistrationMapper">
+
+    <resultMap type="HospitalRegistration" id="HospitalRegistrationResult">
+        <id     property="registrationId"   column="registration_id"   />
+        <result property="registrationNo"   column="registration_no"   />
+        <result property="patientId"        column="patient_id"        />
+        <result property="patientName"      column="patient_name"      />
+        <result property="patientCode"      column="patient_code"      />
+        <result property="patientPhone"     column="patient_phone"     />
+        <result property="sourceId"         column="source_id"         />
+        <result property="scheduleId"       column="schedule_id"       />
+        <result property="departmentId"     column="department_id"     />
+        <result property="departmentName"   column="department_name"   />
+        <result property="doctorId"         column="doctor_id"         />
+        <result property="doctorName"       column="doctor_name"       />
+        <result property="doctorCode"       column="doctor_code"       />
+        <result property="registrationTime" column="registration_time" />
+        <result property="visitDate"        column="visit_date"        />
+        <result property="timeSlot"         column="time_slot"         />
+        <result property="location"         column="location"          />
+        <result property="status"           column="status"            />
+        <result property="delFlag"          column="del_flag"          />
+        <result property="createBy"         column="create_by"         />
+        <result property="createTime"       column="create_time"       />
+        <result property="updateBy"         column="update_by"         />
+        <result property="updateTime"       column="update_time"       />
+        <result property="remark"           column="remark"            />
+    </resultMap>
+
+    <sql id="selectHospitalRegistrationVo">
+        select hr.registration_id, hr.registration_no, hr.patient_id,
+               hp.patient_name, hp.patient_code, hp.phone as patient_phone,
+               hr.source_id, hr.schedule_id, hr.department_id, hd.department_name,
+               hr.doctor_id, hdoc.doctor_name, hdoc.doctor_code,
+               hr.registration_time, hr.visit_date, hr.time_slot, hs.location,
+               hr.status, hr.del_flag, hr.create_by, hr.create_time,
+               hr.update_by, hr.update_time, hr.remark
+        from hospital_registration hr
+        left join hospital_patient hp on hr.patient_id = hp.patient_id
+        left join hospital_department hd on hr.department_id = hd.department_id
+        left join hospital_doctor hdoc on hr.doctor_id = hdoc.doctor_id
+        left join hospital_schedule hs on hr.schedule_id = hs.schedule_id
+    </sql>
+
+    <select id="selectHospitalRegistrationList" parameterType="HospitalRegistration" resultMap="HospitalRegistrationResult">
+        <include refid="selectHospitalRegistrationVo"/>
+        <where>
+            hr.del_flag = '0'
+            <if test="registrationNo != null and registrationNo != ''">
+                AND hr.registration_no like concat('%', #{registrationNo}, '%')
+            </if>
+            <if test="patientId != null">
+                AND hr.patient_id = #{patientId}
+            </if>
+            <if test="patientKeyword != null and patientKeyword != ''">
+                AND (
+                    hp.patient_name like concat('%', #{patientKeyword}, '%')
+                    OR hp.patient_code like concat('%', #{patientKeyword}, '%')
+                    OR hp.phone like concat('%', #{patientKeyword}, '%')
+                    OR hp.id_card like concat('%', #{patientKeyword}, '%')
+                )
+            </if>
+            <if test="departmentId != null">
+                AND hr.department_id = #{departmentId}
+            </if>
+            <if test="doctorId != null">
+                AND hr.doctor_id = #{doctorId}
+            </if>
+            <if test="visitDate != null">
+                AND hr.visit_date = #{visitDate}
+            </if>
+            <if test="timeSlot != null and timeSlot != ''">
+                AND hr.time_slot = #{timeSlot}
+            </if>
+            <if test="status != null and status != ''">
+                AND hr.status = #{status}
+            </if>
+        </where>
+        order by hr.registration_time desc, hr.registration_id desc
+    </select>
+
+    <select id="selectHospitalRegistrationByRegistrationId" parameterType="Long" resultMap="HospitalRegistrationResult">
+        <include refid="selectHospitalRegistrationVo"/>
+        where hr.registration_id = #{registrationId} and hr.del_flag = '0'
+    </select>
+
+    <select id="checkPatientSourceUnique" parameterType="HospitalRegistration" resultMap="HospitalRegistrationResult">
+        <include refid="selectHospitalRegistrationVo"/>
+        where hr.patient_id = #{patientId}
+          and hr.source_id = #{sourceId}
+          and hr.status = '0'
+          and hr.del_flag = '0'
+        limit 1
+    </select>
+
+    <select id="checkRegistrationNoUnique" parameterType="String" resultMap="HospitalRegistrationResult">
+        <include refid="selectHospitalRegistrationVo"/>
+        where hr.registration_no = #{registrationNo} and hr.del_flag = '0' limit 1
+    </select>
+
+    <select id="selectHospitalRegistrationListByPatientId" parameterType="Long" resultMap="HospitalRegistrationResult">
+        <include refid="selectHospitalRegistrationVo"/>
+        where hr.patient_id = #{patientId} and hr.del_flag = '0'
+        order by hr.registration_time desc, hr.registration_id desc
+    </select>
+
+    <insert id="insertHospitalRegistration" parameterType="HospitalRegistration" useGeneratedKeys="true" keyProperty="registrationId">
+        insert into hospital_registration
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="registrationNo != null and registrationNo != ''">registration_no,</if>
+            <if test="patientId != null">patient_id,</if>
+            <if test="sourceId != null">source_id,</if>
+            <if test="scheduleId != null">schedule_id,</if>
+            <if test="departmentId != null">department_id,</if>
+            <if test="doctorId != null">doctor_id,</if>
+            <if test="registrationTime != null">registration_time,</if>
+            <if test="visitDate != null">visit_date,</if>
+            <if test="timeSlot != null and timeSlot != ''">time_slot,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            <if test="remark != null and remark != ''">remark,</if>
+            create_time
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="registrationNo != null and registrationNo != ''">#{registrationNo},</if>
+            <if test="patientId != null">#{patientId},</if>
+            <if test="sourceId != null">#{sourceId},</if>
+            <if test="scheduleId != null">#{scheduleId},</if>
+            <if test="departmentId != null">#{departmentId},</if>
+            <if test="doctorId != null">#{doctorId},</if>
+            <if test="registrationTime != null">#{registrationTime},</if>
+            <if test="visitDate != null">#{visitDate},</if>
+            <if test="timeSlot != null and timeSlot != ''">#{timeSlot},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            <if test="remark != null and remark != ''">#{remark},</if>
+            sysdate()
+        </trim>
+    </insert>
+
+    <update id="updateHospitalRegistration" parameterType="HospitalRegistration">
+        update hospital_registration
+        <set>
+            <if test="registrationNo != null and registrationNo != ''">registration_no = #{registrationNo},</if>
+            <if test="patientId != null">patient_id = #{patientId},</if>
+            <if test="sourceId != null">source_id = #{sourceId},</if>
+            <if test="scheduleId != null">schedule_id = #{scheduleId},</if>
+            <if test="departmentId != null">department_id = #{departmentId},</if>
+            <if test="doctorId != null">doctor_id = #{doctorId},</if>
+            <if test="registrationTime != null">registration_time = #{registrationTime},</if>
+            <if test="visitDate != null">visit_date = #{visitDate},</if>
+            <if test="timeSlot != null and timeSlot != ''">time_slot = #{timeSlot},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            update_time = sysdate()
+        </set>
+        where registration_id = #{registrationId}
+    </update>
+
+    <update id="deleteHospitalRegistrationByRegistrationId" parameterType="Long">
+        update hospital_registration set del_flag = '2', update_time = sysdate() where registration_id = #{registrationId}
+    </update>
+
+    <update id="deleteHospitalRegistrationByRegistrationIds" parameterType="Long">
+        update hospital_registration set del_flag = '2', update_time = sysdate() where registration_id in
+        <foreach item="registrationId" collection="array" open="(" separator="," close=")">
+            #{registrationId}
+        </foreach>
+    </update>
+</mapper>

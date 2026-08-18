@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.hospital.mapper.HospitalPatientMapper">
+
+    <resultMap type="HospitalPatient" id="HospitalPatientResult">
+        <id     property="patientId"        column="patient_id"        />
+        <result property="patientCode"      column="patient_code"      />
+        <result property="patientName"      column="patient_name"      />
+        <result property="gender"           column="gender"            />
+        <result property="birthDate"        column="birth_date"        />
+        <result property="idCard"           column="id_card"           />
+        <result property="phone"            column="phone"             />
+        <result property="address"          column="address"           />
+        <result property="emergencyContact" column="emergency_contact" />
+        <result property="emergencyPhone"   column="emergency_phone"   />
+        <result property="status"           column="status"            />
+        <result property="delFlag"          column="del_flag"          />
+        <result property="createBy"         column="create_by"         />
+        <result property="createTime"       column="create_time"       />
+        <result property="updateBy"         column="update_by"         />
+        <result property="updateTime"       column="update_time"       />
+        <result property="remark"           column="remark"            />
+    </resultMap>
+
+    <sql id="selectHospitalPatientVo">
+        select patient_id, patient_code, patient_name, gender, birth_date, id_card,
+               phone, address, emergency_contact, emergency_phone, status, del_flag,
+               create_by, create_time, update_by, update_time, remark
+        from hospital_patient
+    </sql>
+
+    <select id="selectHospitalPatientList" parameterType="HospitalPatient" resultMap="HospitalPatientResult">
+        <include refid="selectHospitalPatientVo"/>
+        <where>
+            del_flag = '0'
+            <if test="patientCode != null and patientCode != ''">
+                AND patient_code like concat('%', #{patientCode}, '%')
+            </if>
+            <if test="patientName != null and patientName != ''">
+                AND patient_name like concat('%', #{patientName}, '%')
+            </if>
+            <if test="patientKeyword != null and patientKeyword != ''">
+                AND (
+                    patient_name like concat('%', #{patientKeyword}, '%')
+                    OR patient_code like concat('%', #{patientKeyword}, '%')
+                    OR phone like concat('%', #{patientKeyword}, '%')
+                    OR id_card like concat('%', #{patientKeyword}, '%')
+                )
+            </if>
+            <if test="gender != null and gender != ''">
+                AND gender = #{gender}
+            </if>
+            <if test="phone != null and phone != ''">
+                AND phone like concat('%', #{phone}, '%')
+            </if>
+            <if test="idCard != null and idCard != ''">
+                AND id_card like concat('%', #{idCard}, '%')
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+        order by patient_id desc
+    </select>
+
+    <select id="selectHospitalPatientByPatientId" parameterType="Long" resultMap="HospitalPatientResult">
+        <include refid="selectHospitalPatientVo"/>
+        where patient_id = #{patientId} and del_flag = '0'
+    </select>
+
+    <select id="checkPatientCodeUnique" parameterType="String" resultMap="HospitalPatientResult">
+        <include refid="selectHospitalPatientVo"/>
+        where patient_code = #{patientCode} and del_flag = '0' limit 1
+    </select>
+
+    <select id="checkIdCardUnique" parameterType="String" resultMap="HospitalPatientResult">
+        <include refid="selectHospitalPatientVo"/>
+        where id_card = #{idCard} and del_flag = '0' limit 1
+    </select>
+
+    <insert id="insertHospitalPatient" parameterType="HospitalPatient" useGeneratedKeys="true" keyProperty="patientId">
+        insert into hospital_patient
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="patientCode != null and patientCode != ''">patient_code,</if>
+            <if test="patientName != null and patientName != ''">patient_name,</if>
+            <if test="gender != null and gender != ''">gender,</if>
+            <if test="birthDate != null">birth_date,</if>
+            <if test="idCard != null and idCard != ''">id_card,</if>
+            <if test="phone != null and phone != ''">phone,</if>
+            <if test="address != null and address != ''">address,</if>
+            <if test="emergencyContact != null and emergencyContact != ''">emergency_contact,</if>
+            <if test="emergencyPhone != null and emergencyPhone != ''">emergency_phone,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            <if test="remark != null and remark != ''">remark,</if>
+            create_time
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="patientCode != null and patientCode != ''">#{patientCode},</if>
+            <if test="patientName != null and patientName != ''">#{patientName},</if>
+            <if test="gender != null and gender != ''">#{gender},</if>
+            <if test="birthDate != null">#{birthDate},</if>
+            <if test="idCard != null and idCard != ''">#{idCard},</if>
+            <if test="phone != null and phone != ''">#{phone},</if>
+            <if test="address != null and address != ''">#{address},</if>
+            <if test="emergencyContact != null and emergencyContact != ''">#{emergencyContact},</if>
+            <if test="emergencyPhone != null and emergencyPhone != ''">#{emergencyPhone},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            <if test="remark != null and remark != ''">#{remark},</if>
+            sysdate()
+        </trim>
+    </insert>
+
+    <update id="updateHospitalPatient" parameterType="HospitalPatient">
+        update hospital_patient
+        <set>
+            <if test="patientCode != null and patientCode != ''">patient_code = #{patientCode},</if>
+            <if test="patientName != null and patientName != ''">patient_name = #{patientName},</if>
+            <if test="gender != null and gender != ''">gender = #{gender},</if>
+            <if test="birthDate != null">birth_date = #{birthDate},</if>
+            <if test="idCard != null">id_card = #{idCard},</if>
+            <if test="phone != null and phone != ''">phone = #{phone},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="emergencyContact != null">emergency_contact = #{emergencyContact},</if>
+            <if test="emergencyPhone != null">emergency_phone = #{emergencyPhone},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            update_time = sysdate()
+        </set>
+        where patient_id = #{patientId}
+    </update>
+
+    <update id="deleteHospitalPatientByPatientId" parameterType="Long">
+        update hospital_patient set del_flag = '2', update_time = sysdate() where patient_id = #{patientId}
+    </update>
+
+    <update id="deleteHospitalPatientByPatientIds" parameterType="Long">
+        update hospital_patient set del_flag = '2', update_time = sysdate() where patient_id in
+        <foreach item="patientId" collection="array" open="(" separator="," close=")">
+            #{patientId}
+        </foreach>
+    </update>
+</mapper>

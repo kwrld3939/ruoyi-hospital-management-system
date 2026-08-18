@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.hospital.mapper.HospitalVisitRecordMapper">
+
+    <resultMap type="HospitalVisitRecord" id="HospitalVisitRecordResult">
+        <id     property="visitId"          column="visit_id"          />
+        <result property="registrationId"   column="registration_id"   />
+        <result property="registrationNo"   column="registration_no"   />
+        <result property="patientId"        column="patient_id"        />
+        <result property="patientName"      column="patient_name"      />
+        <result property="patientCode"      column="patient_code"      />
+        <result property="patientPhone"     column="patient_phone"     />
+        <result property="departmentId"     column="department_id"     />
+        <result property="departmentName"   column="department_name"   />
+        <result property="doctorId"         column="doctor_id"         />
+        <result property="doctorName"       column="doctor_name"       />
+        <result property="doctorCode"       column="doctor_code"       />
+        <result property="visitTime"        column="visit_time"        />
+        <result property="chiefComplaint"   column="chief_complaint"   />
+        <result property="diagnosis"        column="diagnosis"         />
+        <result property="treatmentAdvice"  column="treatment_advice"  />
+        <result property="status"           column="status"            />
+        <result property="delFlag"          column="del_flag"          />
+        <result property="createBy"         column="create_by"         />
+        <result property="createTime"       column="create_time"       />
+        <result property="updateBy"         column="update_by"         />
+        <result property="updateTime"       column="update_time"       />
+        <result property="remark"           column="remark"            />
+    </resultMap>
+
+    <sql id="selectHospitalVisitRecordVo">
+        select hvr.visit_id, hvr.registration_id, hr.registration_no,
+               hvr.patient_id, hp.patient_name, hp.patient_code, hp.phone as patient_phone,
+               hvr.department_id, hd.department_name,
+               hvr.doctor_id, hdoc.doctor_name, hdoc.doctor_code,
+               hvr.visit_time, hvr.chief_complaint, hvr.diagnosis, hvr.treatment_advice,
+               hvr.status, hvr.del_flag, hvr.create_by, hvr.create_time,
+               hvr.update_by, hvr.update_time, hvr.remark
+        from hospital_visit_record hvr
+        left join hospital_registration hr on hvr.registration_id = hr.registration_id
+        left join hospital_patient hp on hvr.patient_id = hp.patient_id
+        left join hospital_department hd on hvr.department_id = hd.department_id
+        left join hospital_doctor hdoc on hvr.doctor_id = hdoc.doctor_id
+    </sql>
+
+    <select id="selectHospitalVisitRecordList" parameterType="HospitalVisitRecord" resultMap="HospitalVisitRecordResult">
+        <include refid="selectHospitalVisitRecordVo"/>
+        <where>
+            hvr.del_flag = '0'
+            <if test="registrationNo != null and registrationNo != ''">
+                AND hr.registration_no like concat('%', #{registrationNo}, '%')
+            </if>
+            <if test="registrationId != null">
+                AND hvr.registration_id = #{registrationId}
+            </if>
+            <if test="patientId != null">
+                AND hvr.patient_id = #{patientId}
+            </if>
+            <if test="patientKeyword != null and patientKeyword != ''">
+                AND (
+                    hp.patient_name like concat('%', #{patientKeyword}, '%')
+                    OR hp.patient_code like concat('%', #{patientKeyword}, '%')
+                    OR hp.phone like concat('%', #{patientKeyword}, '%')
+                    OR hp.id_card like concat('%', #{patientKeyword}, '%')
+                )
+            </if>
+            <if test="departmentId != null">
+                AND hvr.department_id = #{departmentId}
+            </if>
+            <if test="doctorId != null">
+                AND hvr.doctor_id = #{doctorId}
+            </if>
+            <if test="visitDate != null">
+                AND date(hvr.visit_time) = #{visitDate}
+            </if>
+            <if test="status != null and status != ''">
+                AND hvr.status = #{status}
+            </if>
+        </where>
+        order by hvr.visit_time desc, hvr.visit_id desc
+    </select>
+
+    <select id="selectHospitalVisitRecordByVisitId" parameterType="Long" resultMap="HospitalVisitRecordResult">
+        <include refid="selectHospitalVisitRecordVo"/>
+        where hvr.visit_id = #{visitId} and hvr.del_flag = '0'
+    </select>
+
+    <select id="checkRegistrationVisitUnique" parameterType="HospitalVisitRecord" resultMap="HospitalVisitRecordResult">
+        <include refid="selectHospitalVisitRecordVo"/>
+        where hvr.registration_id = #{registrationId}
+          and hvr.del_flag = '0'
+        <if test="status != null and status != ''">
+          and hvr.status = #{status}
+        </if>
+        limit 1
+    </select>
+
+    <select id="selectHospitalVisitRecordListByPatientId" parameterType="Long" resultMap="HospitalVisitRecordResult">
+        <include refid="selectHospitalVisitRecordVo"/>
+        where hvr.patient_id = #{patientId} and hvr.del_flag = '0'
+        order by hvr.visit_time desc, hvr.visit_id desc
+    </select>
+
+    <insert id="insertHospitalVisitRecord" parameterType="HospitalVisitRecord" useGeneratedKeys="true" keyProperty="visitId">
+        insert into hospital_visit_record
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="registrationId != null">registration_id,</if>
+            <if test="patientId != null">patient_id,</if>
+            <if test="departmentId != null">department_id,</if>
+            <if test="doctorId != null">doctor_id,</if>
+            <if test="visitTime != null">visit_time,</if>
+            <if test="chiefComplaint != null and chiefComplaint != ''">chief_complaint,</if>
+            <if test="diagnosis != null and diagnosis != ''">diagnosis,</if>
+            <if test="treatmentAdvice != null and treatmentAdvice != ''">treatment_advice,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            <if test="remark != null and remark != ''">remark,</if>
+            create_time
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="registrationId != null">#{registrationId},</if>
+            <if test="patientId != null">#{patientId},</if>
+            <if test="departmentId != null">#{departmentId},</if>
+            <if test="doctorId != null">#{doctorId},</if>
+            <if test="visitTime != null">#{visitTime},</if>
+            <if test="chiefComplaint != null and chiefComplaint != ''">#{chiefComplaint},</if>
+            <if test="diagnosis != null and diagnosis != ''">#{diagnosis},</if>
+            <if test="treatmentAdvice != null and treatmentAdvice != ''">#{treatmentAdvice},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            <if test="remark != null and remark != ''">#{remark},</if>
+            sysdate()
+        </trim>
+    </insert>
+
+    <update id="updateHospitalVisitRecord" parameterType="HospitalVisitRecord">
+        update hospital_visit_record
+        <set>
+            <if test="registrationId != null">registration_id = #{registrationId},</if>
+            <if test="patientId != null">patient_id = #{patientId},</if>
+            <if test="departmentId != null">department_id = #{departmentId},</if>
+            <if test="doctorId != null">doctor_id = #{doctorId},</if>
+            <if test="visitTime != null">visit_time = #{visitTime},</if>
+            <if test="chiefComplaint != null and chiefComplaint != ''">chief_complaint = #{chiefComplaint},</if>
+            <if test="diagnosis != null and diagnosis != ''">diagnosis = #{diagnosis},</if>
+            <if test="treatmentAdvice != null">treatment_advice = #{treatmentAdvice},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            update_time = sysdate()
+        </set>
+        where visit_id = #{visitId}
+    </update>
+
+    <update id="deleteHospitalVisitRecordByVisitId" parameterType="Long">
+        update hospital_visit_record set del_flag = '2', update_time = sysdate() where visit_id = #{visitId}
+    </update>
+
+    <update id="deleteHospitalVisitRecordByVisitIds" parameterType="Long">
+        update hospital_visit_record set del_flag = '2', update_time = sysdate() where visit_id in
+        <foreach item="visitId" collection="array" open="(" separator="," close=")">
+            #{visitId}
+        </foreach>
+    </update>
+</mapper>
