@@ -36,6 +36,14 @@
 
 - RuoYi-Vue 3.9.2 Spring Boot 3 版本
 
+## 若依官方入口
+
+项目基于若依官方框架二次开发，这里保留原项目入口，方便查看基础能力和文档：
+
+- 官方仓库：<https://gitee.com/y_project/RuoYi-Vue>
+- 官方文档：<https://doc.ruoyi.vip/ruoyi-vue/>
+- GitHub 仓库：<https://github.com/yangzongzhuan/RuoYi-Vue>
+
 ## 核心模块
 
 医院业务模块：
