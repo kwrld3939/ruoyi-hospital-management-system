@@ -14,6 +14,8 @@ public interface HospitalPatientMapper
 
     public List<HospitalPatient> selectHospitalPatientList(HospitalPatient hospitalPatient);
 
+    public List<HospitalPatient> selectArchivedHospitalPatientList(HospitalPatient hospitalPatient);
+
     public HospitalPatient checkPatientCodeUnique(String patientCode);
 
     public HospitalPatient checkIdCardUnique(String idCard);
@@ -25,4 +27,8 @@ public interface HospitalPatientMapper
     public int deleteHospitalPatientByPatientId(Long patientId);
 
     public int deleteHospitalPatientByPatientIds(Long[] patientIds);
+
+    public int archiveHospitalPatientByPatientId(Long patientId);
+
+    public int restoreHospitalPatientByPatientId(Long patientId);
 }

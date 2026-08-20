@@ -33,6 +33,12 @@ public class HospitalPatientServiceImpl implements IHospitalPatientService
     }
 
     @Override
+    public List<HospitalPatient> selectArchivedHospitalPatientList(HospitalPatient hospitalPatient)
+    {
+        return hospitalPatientMapper.selectArchivedHospitalPatientList(hospitalPatient);
+    }
+
+    @Override
     public int insertHospitalPatient(HospitalPatient hospitalPatient)
     {
         if (StringUtils.isEmpty(hospitalPatient.getStatus()))
@@ -58,6 +64,28 @@ public class HospitalPatientServiceImpl implements IHospitalPatientService
     public int deleteHospitalPatientByPatientId(Long patientId)
     {
         return hospitalPatientMapper.deleteHospitalPatientByPatientId(patientId);
+    }
+
+    @Override
+    public int archiveHospitalPatientByPatientIds(Long[] patientIds)
+    {
+        int rows = 0;
+        for (Long patientId : patientIds)
+        {
+            rows += hospitalPatientMapper.archiveHospitalPatientByPatientId(patientId);
+        }
+        return rows;
+    }
+
+    @Override
+    public int restoreHospitalPatientByPatientIds(Long[] patientIds)
+    {
+        int rows = 0;
+        for (Long patientId : patientIds)
+        {
+            rows += hospitalPatientMapper.restoreHospitalPatientByPatientId(patientId);
+        }
+        return rows;
     }
 
     @Override

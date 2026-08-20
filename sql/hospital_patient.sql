@@ -38,10 +38,13 @@ insert into hospital_patient values
 -- ----------------------------
 -- 菜单权限
 -- ----------------------------
-delete from sys_menu where menu_id in (2020, 2021, 2022, 2023, 2024, 2025, 2026);
+delete from sys_menu where menu_id in (2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028);
 insert into sys_menu values('2020', '患者管理', '2000', '3', 'patient', 'hospital/patient/index', '', '', 1, 0, 'C', '0', '0', 'hospital:patient:list', 'peoples', 'admin', sysdate(), '', null, '患者管理菜单');
 insert into sys_menu values('2021', '患者查询', '2020', '1', '#', '', '', '', 1, 0, 'F', '0', '0', 'hospital:patient:query', '#', 'admin', sysdate(), '', null, '');
 insert into sys_menu values('2022', '患者新增', '2020', '2', '#', '', '', '', 1, 0, 'F', '0', '0', 'hospital:patient:add', '#', 'admin', sysdate(), '', null, '');
 insert into sys_menu values('2023', '患者修改', '2020', '3', '#', '', '', '', 1, 0, 'F', '0', '0', 'hospital:patient:edit', '#', 'admin', sysdate(), '', null, '');
-insert into sys_menu values('2024', '患者删除', '2020', '4', '#', '', '', '', 1, 0, 'F', '0', '0', 'hospital:patient:remove', '#', 'admin', sysdate(), '', null, '');
+insert into sys_menu values('2024', '患者停用', '2020', '4', '#', '', '', '', 1, 0, 'F', '0', '0', 'hospital:patient:remove', '#', 'admin', sysdate(), '', null, '');
 insert into sys_menu values('2025', '患者导出', '2020', '5', '#', '', '', '', 1, 0, 'F', '0', '0', 'hospital:patient:export', '#', 'admin', sysdate(), '', null, '');
+insert into sys_menu values('2026', '归档患者', '2000', '10', 'patientArchive', 'hospital/patient/archive', '', '', 1, 0, 'C', '0', '0', 'hospital:patient:archive:list', 'peoples', 'admin', sysdate(), '', null, '归档患者菜单');
+insert into sys_menu values('2027', '归档患者查询', '2026', '1', '#', '', '', '', 1, 0, 'F', '0', '0', 'hospital:patient:archive:query', '#', 'admin', sysdate(), '', null, '');
+insert into sys_menu values('2028', '归档患者恢复', '2026', '2', '#', '', '', '', 1, 0, 'F', '0', '0', 'hospital:patient:archive:restore', '#', 'admin', sysdate(), '', null, '');

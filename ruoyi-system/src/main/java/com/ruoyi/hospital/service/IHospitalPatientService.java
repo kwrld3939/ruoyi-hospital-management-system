@@ -14,6 +14,8 @@ public interface IHospitalPatientService
 
     public List<HospitalPatient> selectHospitalPatientList(HospitalPatient hospitalPatient);
 
+    public List<HospitalPatient> selectArchivedHospitalPatientList(HospitalPatient hospitalPatient);
+
     public int insertHospitalPatient(HospitalPatient hospitalPatient);
 
     public int updateHospitalPatient(HospitalPatient hospitalPatient);
@@ -21,6 +23,10 @@ public interface IHospitalPatientService
     public int deleteHospitalPatientByPatientIds(Long[] patientIds);
 
     public int deleteHospitalPatientByPatientId(Long patientId);
+
+    public int archiveHospitalPatientByPatientIds(Long[] patientIds);
+
+    public int restoreHospitalPatientByPatientIds(Long[] patientIds);
 
     public boolean checkPatientCodeUnique(HospitalPatient hospitalPatient);
 

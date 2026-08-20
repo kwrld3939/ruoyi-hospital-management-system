@@ -49,6 +49,18 @@ public class HospitalPatientController extends BaseController
     }
 
     /**
+     * 查询归档患者列表
+     */
+    @PreAuthorize("@ss.hasRole('admin')")
+    @GetMapping("/archive/list")
+    public TableDataInfo archiveList(HospitalPatient hospitalPatient)
+    {
+        startPage();
+        List<HospitalPatient> list = hospitalPatientService.selectArchivedHospitalPatientList(hospitalPatient);
+        return getDataTable(list);
+    }
+
+    /**
      * 导出患者列表
      */
     @PreAuthorize("@ss.hasPermi('hospital:patient:export')")
@@ -89,7 +101,7 @@ public class HospitalPatientController extends BaseController
         }
         if (!hospitalPatientService.checkPatientCodeUnique(hospitalPatient))
         {
-            return error("新增患者'" + hospitalPatient.getPatientName() + "'失败，患者编码已存在");
+            return error("新增患者'" + hospitalPatient.getPatientName() + "'失败，患者编码已存在，请更换患者编码");
         }
         if (!hospitalPatientService.checkIdCardUnique(hospitalPatient))
         {
@@ -140,6 +152,28 @@ public class HospitalPatientController extends BaseController
     public AjaxResult remove(@PathVariable Long[] patientIds)
     {
         return toAjax(hospitalPatientService.deleteHospitalPatientByPatientIds(patientIds));
+    }
+
+    /**
+     * 归档患者，仅允许归档停用患者
+     */
+    @PreAuthorize("@ss.hasRole('admin')")
+    @Log(title = "患者管理", businessType = BusinessType.DELETE)
+    @DeleteMapping("/archive/{patientIds}")
+    public AjaxResult archive(@PathVariable Long[] patientIds)
+    {
+        return toAjax(hospitalPatientService.archiveHospitalPatientByPatientIds(patientIds));
+    }
+
+    /**
+     * 恢复归档患者，恢复后进入停用状态
+     */
+    @PreAuthorize("@ss.hasRole('admin')")
+    @Log(title = "患者管理", businessType = BusinessType.UPDATE)
+    @PutMapping("/archive/restore/{patientIds}")
+    public AjaxResult restore(@PathVariable Long[] patientIds)
+    {
+        return toAjax(hospitalPatientService.restoreHospitalPatientByPatientIds(patientIds));
     }
 
     private boolean isValidStatus(String status)

@@ -9,6 +9,15 @@ export function listPatient(query) {
   })
 }
 
+// 查询归档患者列表
+export function listArchivedPatient(query) {
+  return request({
+    url: '/hospital/patient/archive/list',
+    method: 'get',
+    params: query
+  })
+}
+
 // 查询患者详细
 export function getPatient(patientId) {
   return request({
@@ -40,5 +49,21 @@ export function delPatient(patientId) {
   return request({
     url: '/hospital/patient/' + patientId,
     method: 'delete'
+  })
+}
+
+// 归档患者
+export function archivePatient(patientId) {
+  return request({
+    url: '/hospital/patient/archive/' + patientId,
+    method: 'delete'
+  })
+}
+
+// 恢复归档患者
+export function restorePatient(patientId) {
+  return request({
+    url: '/hospital/patient/archive/restore/' + patientId,
+    method: 'put'
   })
 }

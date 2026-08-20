@@ -63,7 +63,7 @@
           :disabled="multiple"
           @click="handleDelete"
           v-hasPermi="['hospital:patient:remove']"
-        >删除</el-button>
+        >停用</el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button
@@ -125,12 +125,21 @@
             v-hasPermi="['hospital:medicalRecord:list']"
           >病历</el-button>
           <el-button
+            v-if="scope.row.status !== '1'"
             size="mini"
             type="text"
             icon="el-icon-delete"
             @click="handleDelete(scope.row)"
             v-hasPermi="['hospital:patient:remove']"
-          >删除</el-button>
+          >停用</el-button>
+          <el-button
+            v-if="scope.row.status === '1'"
+            size="mini"
+            type="text"
+            icon="el-icon-folder"
+            @click="handleArchive(scope.row)"
+            v-hasRole="['admin']"
+          >归档</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -228,7 +237,7 @@
 </template>
 
 <script>
-import { listPatient, getPatient, delPatient, addPatient, updatePatient } from "@/api/hospital/patient"
+import { listPatient, getPatient, delPatient, archivePatient, addPatient, updatePatient } from "@/api/hospital/patient"
 
 export default {
   name: "HospitalPatient",
@@ -358,11 +367,20 @@ export default {
     },
     handleDelete(row) {
       const patientIds = row.patientId || this.ids
-      this.$modal.confirm('是否确认删除患者编号为"' + patientIds + '"的数据项？').then(function() {
+      this.$modal.confirm('是否确认停用患者编号为"' + patientIds + '"的数据项？停用后历史预约和就诊记录会继续保留。').then(function() {
         return delPatient(patientIds)
       }).then(() => {
         this.getList()
-        this.$modal.msgSuccess("删除成功")
+        this.$modal.msgSuccess("停用成功")
+      }).catch(() => {})
+    },
+    handleArchive(row) {
+      const patientIds = row.patientId || this.ids
+      this.$modal.confirm('是否确认归档患者编号为"' + patientIds + '"的数据项？归档后将从普通患者管理中隐藏，只能由超级管理员恢复。').then(function() {
+        return archivePatient(patientIds)
+      }).then(() => {
+        this.getList()
+        this.$modal.msgSuccess("归档成功")
       }).catch(() => {})
     },
     handleExport() {
@@ -373,3 +391,4 @@ export default {
   }
 }
 </script>
+
